@@ -4,12 +4,12 @@
 %global json_glib_version 0.12.0
 %global libinput_version 1.4
 %global pipewire_version 0.3.0
-%global mutter_api_version 10
+%global mutter_api_version 11
 
 %global tarball_version %%(echo %{version} | tr '~' '.')
 
 Name:          mutter
-Version:       42.2
+Version:       43~alpha
 Release:       1%{?dist}
 Summary:       Window and compositing manager based on Clutter
 
@@ -169,6 +169,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 %{_datadir}/mutter-%{mutter_api_version}/tests
 
 %changelog
+* Sun Jul 10 2022 Florian Müllner <fmuellner@redhat.com> - 43~alpha-1
+ - Update to 43.alpha
+
 * Sun May 29 2022 Florian Müllner <fmuellner@redhat.com> - 42.2-1
 - Update to 42.2
 
