@@ -1,9 +1,9 @@
+%global glib_version 2.69.0
 %global gtk3_version 3.19.8
-%global glib_version 2.53.2
 %global gsettings_desktop_schemas_version 40~alpha
 %global json_glib_version 0.12.0
-%global libinput_version 1.4
-%global pipewire_version 0.3.0
+%global libinput_version 1.19.0
+%global pipewire_version 0.3.33
 %global mutter_api_version 11
 
 %global tarball_version %%(echo %{version} | tr '~' '.')
