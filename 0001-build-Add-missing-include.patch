@@ -1,0 +1,27 @@
+From b0607154668f9f3e8a5959470a1fc7f601e66b77 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Florian=20M=C3=BCllner?= <fmuellner@gnome.org>
+Date: Wed, 10 Aug 2022 20:13:24 +0200
+Subject: [PATCH] build: Add missing include
+
+util-private.h includes glib-i18n-lib.h, which requires GETTEXT_PACKAGE
+to be defined. The define comes from config.h,
+but that cannot be included in headers, so we have to make sure
+that any source file that pulls in util-private.h (or a header
+that includes it) includes config.h first.
+---
+ src/meta-private-enum-types.c.in | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/meta-private-enum-types.c.in b/src/meta-private-enum-types.c.in
+index c2479a91a..55cd855ca 100644
+--- a/src/meta-private-enum-types.c.in
++++ b/src/meta-private-enum-types.c.in
+@@ -1,4 +1,5 @@
+ /*** BEGIN file-header ***/
++#include "config.h"
+ #include "meta-private-enum-types.h"
+ /*** END file-header ***/
+ 
+-- 
+2.36.1
+
