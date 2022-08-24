@@ -10,7 +10,7 @@
 
 Name:          mutter
 Version:       43~beta
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Window and compositing manager based on Clutter
 
 License:       GPLv2+
@@ -27,6 +27,10 @@ Patch1:        0001-Revert-build-Do-not-provide-built-sources-as-libmutt.patch
 Patch2:        mutter-42.alpha-disable-tegra.patch
 
 Patch3:        0001-build-Add-missing-include.patch
+
+# Backported from upstream
+# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2592
+Patch4:        2592.patch
 
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
@@ -171,6 +175,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 %{_datadir}/mutter-%{mutter_api_version}/tests
 
 %changelog
+* Wed Aug 24 2022 Kalev Lember <klember@redhat.com> - 43~beta-2
+- Backport upstream patch to fix a compositor crash (#2120470)
+
 * Wed Aug 10 2022 Florian Müllner <fmuellner@redhat.com> - 43~beta-1
 - Update to 43.beta
 
