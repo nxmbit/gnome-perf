@@ -10,7 +10,7 @@
 
 Name:          mutter
 Version:       43~beta
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       Window and compositing manager based on Clutter
 
 License:       GPLv2+
@@ -31,6 +31,10 @@ Patch3:        0001-build-Add-missing-include.patch
 # Backported from upstream
 # https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2592
 Patch4:        2592.patch
+
+# Backported from upstream
+# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2588
+Patch5:        2588.patch
 
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
@@ -175,6 +179,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 %{_datadir}/mutter-%{mutter_api_version}/tests
 
 %changelog
+* Thu Aug 25 2022 Kalev Lember <klember@redhat.com> - 43~beta-3
+- wayland: Ensure to unlink destroy listeners after destruction
+
 * Wed Aug 24 2022 Kalev Lember <klember@redhat.com> - 43~beta-2
 - Backport upstream patch to fix a compositor crash (#2120470)
 
