@@ -1,0 +1,31 @@
+From 9d558e334cb74a09932e7ea8013c7e1babb1b215 Mon Sep 17 00:00:00 2001
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Thu, 25 Aug 2022 11:07:53 +0200
+Subject: [PATCH] wayland: Unlink surface listener when freeing token
+
+If the token ended up consumed and freed, we might leave a dangling
+destroy listener after freeing the token struct.
+
+Fixes: ed516dde89 (wayland: Add destruction listener to activation token surface)
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2594>
+---
+ src/wayland/meta-wayland-activation.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/wayland/meta-wayland-activation.c b/src/wayland/meta-wayland-activation.c
+index b7035ab5ce..db1f2b10d8 100644
+--- a/src/wayland/meta-wayland-activation.c
++++ b/src/wayland/meta-wayland-activation.c
+@@ -214,6 +214,9 @@ meta_xdg_activation_token_free (MetaXdgActivationToken *token)
+       g_clear_object (&token->sequence);
+     }
+ 
++  if (token->surface)
++    wl_list_remove (&token->surface_listener.link);
++
+   g_free (token->app_id);
+   g_free (token->token);
+   g_free (token);
+-- 
+GitLab
+

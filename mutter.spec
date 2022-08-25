@@ -10,7 +10,7 @@
 
 Name:          mutter
 Version:       43~beta
-Release:       3%{?dist}
+Release:       4%{?dist}
 Summary:       Window and compositing manager based on Clutter
 
 License:       GPLv2+
@@ -35,6 +35,10 @@ Patch4:        2592.patch
 # Backported from upstream
 # https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2588
 Patch5:        2588.patch
+
+# Backported from upstream
+# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2594
+Patch6:        2594.patch
 
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
@@ -179,6 +183,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 %{_datadir}/mutter-%{mutter_api_version}/tests
 
 %changelog
+* Thu Aug 25 2022 Kalev Lember <klember@redhat.com> - 43~beta-4
+- wayland: Unlink surface listener when freeing token
+
 * Thu Aug 25 2022 Kalev Lember <klember@redhat.com> - 43~beta-3
 - wayland: Ensure to unlink destroy listeners after destruction
 
