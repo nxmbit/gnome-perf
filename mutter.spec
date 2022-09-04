@@ -4,13 +4,15 @@
 %global json_glib_version 0.12.0
 %global libinput_version 1.19.0
 %global pipewire_version 0.3.33
+%global lcms2_version 2.6
+%global colord_version 1.4.5
 %global mutter_api_version 11
 
 %global tarball_version %%(echo %{version} | tr '~' '.')
 
 Name:          mutter
-Version:       43~beta
-Release:       4%{?dist}
+Version:       43~rc
+Release:       1%{?dist}
 Summary:       Window and compositing manager based on Clutter
 
 License:       GPLv2+
@@ -25,20 +27,6 @@ Patch1:        0001-Revert-build-Do-not-provide-built-sources-as-libmutt.patch
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1936991
 Patch2:        mutter-42.alpha-disable-tegra.patch
-
-Patch3:        0001-build-Add-missing-include.patch
-
-# Backported from upstream
-# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2592
-Patch4:        2592.patch
-
-# Backported from upstream
-# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2588
-Patch5:        2588.patch
-
-# Backported from upstream
-# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2594
-Patch6:        2594.patch
 
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
@@ -87,6 +75,8 @@ BuildRequires: pkgconfig(libstartup-notification-1.0)
 BuildRequires: pkgconfig(wayland-eglstream)
 BuildRequires: pkgconfig(wayland-protocols)
 BuildRequires: pkgconfig(wayland-server)
+BuildRequires: pkgconfig(lcms2) >= %{lcms2_version}
+BuildRequires: pkgconfig(colord) >= %{colord_version}
 
 BuildRequires: pkgconfig(json-glib-1.0) >= %{json_glib_version}
 BuildRequires: pkgconfig(libinput) >= %{libinput_version}
@@ -183,6 +173,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 %{_datadir}/mutter-%{mutter_api_version}/tests
 
 %changelog
+* Sun Sep 04 2022 Florian Müllner <fmuellner@redhat.com> - 43~rc-1
+- Update to 43.rc
+
 * Thu Aug 25 2022 Kalev Lember <klember@redhat.com> - 43~beta-4
 - wayland: Unlink surface listener when freeing token
 
