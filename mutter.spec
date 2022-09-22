@@ -174,7 +174,7 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 
 %changelog
 * Sat Sep 17 2022 Florian Müllner <fmuellner@redhat.com> - 43.0-1
--  Update to 43.0
+- Update to 43.0
 
 * Sun Sep 04 2022 Florian Müllner <fmuellner@redhat.com> - 43~rc-1
 - Update to 43.rc
