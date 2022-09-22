@@ -32,6 +32,11 @@ Patch2:        mutter-42.alpha-disable-tegra.patch
 # https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2623
 Patch3:        2623.patch
 
+# Backported from upstream
+# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2624
+# https://bugzilla.redhat.com/show_bug.cgi?id=2128660
+Patch4:        2624.patch
+
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
 BuildRequires: pkgconfig(libwacom)
@@ -179,6 +184,8 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 %changelog
 * Thu Sep 22 2022 Kalev Lember <klember@redhat.com> - 43.0-2
 - Backport upstream MR2623 to fix night light controls
+- Backport upstream MR2624 to fix maximized windows appearing on all
+  screens (#2128660)
 
 * Sat Sep 17 2022 Florian Müllner <fmuellner@redhat.com> - 43.0-1
 - Update to 43.0
