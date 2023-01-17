@@ -1,0 +1,88 @@
+From 30ab9247f57b270d46b1c2c5c194f834bf8aafff Mon Sep 17 00:00:00 2001
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Mon, 9 Jan 2023 15:40:03 +0100
+Subject: [PATCH 2/2] xwayland: Add support for byte-swapped clients
+
+Instructs Xwayland to allow/disallow connections from X11 clients with a
+different endianess based on the "xwayland-allow-byte-swapped-clients"
+setting.
+
+This option has no effect if Xwayland does not support the command
+option +byteswappedclients/-byteswappedclients.
+
+Closes: https://gitlab.gnome.org/GNOME/mutter/-/issues/2576
+---
+ config.h.meson              |  3 +++
+ meson.build                 | 12 ++++++++++++
+ src/wayland/meta-xwayland.c |  7 +++++++
+ 3 files changed, 22 insertions(+)
+
+diff --git a/config.h.meson b/config.h.meson
+index c7724b24f..5f9ea696e 100644
+--- a/config.h.meson
++++ b/config.h.meson
+@@ -109,3 +109,6 @@
+ 
+ /* Whether the Xwayland -terminate supports a delay */
+ #mesondefine HAVE_XWAYLAND_TERMINATE_DELAY
++
++/* Whether the Xwayland supports +/-byteswappedclients */
++#mesondefine HAVE_XWAYLAND_BYTE_SWAPPED_CLIENTS
+diff --git a/meson.build b/meson.build
+index 07460c0f1..a9608a9fd 100644
+--- a/meson.build
++++ b/meson.build
+@@ -526,6 +526,7 @@ endif
+ have_xwayland_initfd = false
+ have_xwayland_listenfd = false
+ have_xwayland_terminate_delay = false
++have_xwayland_byte_swapped_clients = false
+ if have_xwayland
+   xwayland_dep = dependency('xwayland', required: false)
+ 
+@@ -587,6 +588,16 @@ if have_xwayland
+   if (have_xwayland_terminate_delay)
+     cdata.set('HAVE_XWAYLAND_TERMINATE_DELAY', 1)
+   endif
++
++  # For Xwayland +/-byteswappedclients usage
++  if xwayland_dep.found()
++    have_xwayland_byte_swapped_clients = xwayland_dep.get_variable('have_byteswappedclients',
++                                                                   default_value: 'false') == 'true'
++  endif
++
++  if (have_xwayland_byte_swapped_clients)
++    cdata.set('HAVE_XWAYLAND_BYTE_SWAPPED_CLIENTS', 1)
++  endif
+ endif
+ 
+ have_xsetioerrorexithandler = false
+@@ -675,6 +686,7 @@ summary('Xwayland initfd', have_xwayland_initfd, section: 'Options')
+ summary('Xwayland listenfd', have_xwayland_listenfd, section: 'Options')
+ summary('Safe X11 I/O errors', have_xsetioerrorexithandler, section: 'Options')
+ summary('Xwayland terminate delay', have_xwayland_terminate_delay, section: 'Options')
++summary('Xwayland byte-swapped clients', have_xwayland_byte_swapped_clients, section: 'Options')
+ 
+ summary('Enabled', have_tests, section: 'Tests')
+ summary('Core tests', have_core_tests, section: 'Tests')
+diff --git a/src/wayland/meta-xwayland.c b/src/wayland/meta-xwayland.c
+index c9d94b2e3..8e8de1441 100644
+--- a/src/wayland/meta-xwayland.c
++++ b/src/wayland/meta-xwayland.c
+@@ -880,6 +880,13 @@ meta_xwayland_start_xserver (MetaXWaylandManager *manager,
+   args[i++] = "7";
+ #endif
+ 
++#ifdef HAVE_XWAYLAND_BYTE_SWAPPED_CLIENTS
++  if (meta_settings_are_xwayland_byte_swapped_clients_allowed (settings))
++    args[i++] = "+byteswappedclients";
++  else
++    args[i++] = "-byteswappedclients";
++#endif
++
+   if (meta_settings_is_experimental_feature_enabled (settings,
+                                                      META_EXPERIMENTAL_FEATURE_AUTOCLOSE_XWAYLAND))
+ #ifdef HAVE_XWAYLAND_TERMINATE_DELAY
+-- 
+2.39.0
+

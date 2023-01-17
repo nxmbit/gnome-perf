@@ -1,0 +1,122 @@
+From 865edafa80f474942e04c18ece9dfafd48b777d1 Mon Sep 17 00:00:00 2001
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Mon, 9 Jan 2023 15:35:52 +0100
+Subject: [PATCH 1/2] settings: Add Xwayland byte-swapped clients
+
+Recent versions of Xwayland can allow or disallow X11 clients from
+different endianess to connect.
+
+Add a setting to configure this feature from mutter, who spawns
+Xwayland.
+---
+ data/org.gnome.mutter.wayland.gschema.xml.in | 24 ++++++++++++++++++++
+ src/backends/meta-settings-private.h         |  2 ++
+ src/backends/meta-settings.c                 | 23 +++++++++++++++++++
+ 3 files changed, 49 insertions(+)
+
+diff --git a/data/org.gnome.mutter.wayland.gschema.xml.in b/data/org.gnome.mutter.wayland.gschema.xml.in
+index 8a1878e10..3c3e54498 100644
+--- a/data/org.gnome.mutter.wayland.gschema.xml.in
++++ b/data/org.gnome.mutter.wayland.gschema.xml.in
+@@ -125,6 +125,30 @@
+       </description>
+     </key>
+ 
++    <key name="xwayland-allow-byte-swapped-clients" type="b">
++      <default>false</default>
++      <summary>Allow X11 clients with a different endianess to connect to Xwayland</summary>
++      <description>
++        Allow connections from clients with an endianess different to that
++	of Xwayland.
++
++	The X server byte-swapping code is a huge attack surface, much of
++	that code in Xwayland is prone to security issues.
++
++	The use-case of byte-swapped clients is very niche, and disabled by
++	default in Xwayland.
++
++	Enable this option to instruct Xwayland to accept connections from
++	X11 clients with a different endianess.
++
++        This option has no effect if Xwayland does not support the command
++	line option +byteswappedclients/-byteswappedclients to control that
++	setting.
++
++        Xwayland needs to be restarted for this setting to take effect.
++      </description>
++    </key>
++
+   </schema>
+ 
+ </schemalist>
+diff --git a/src/backends/meta-settings-private.h b/src/backends/meta-settings-private.h
+index 47d2d6074..87af21515 100644
+--- a/src/backends/meta-settings-private.h
++++ b/src/backends/meta-settings-private.h
+@@ -77,6 +77,8 @@ gboolean meta_settings_are_xwayland_grabs_allowed (MetaSettings *settings);
+ 
+ int meta_settings_get_xwayland_disable_extensions (MetaSettings *settings);
+ 
++gboolean meta_settings_are_xwayland_byte_swapped_clients_allowed (MetaSettings *settings);
++
+ gboolean meta_settings_is_privacy_screen_enabled (MetaSettings *settings);
+ 
+ void meta_settings_set_privacy_screen_enabled (MetaSettings *settings,
+diff --git a/src/backends/meta-settings.c b/src/backends/meta-settings.c
+index 2826ff98f..8d3d624cc 100644
+--- a/src/backends/meta-settings.c
++++ b/src/backends/meta-settings.c
+@@ -75,6 +75,9 @@ struct _MetaSettings
+ 
+   /* A bitmask of MetaXwaylandExtension enum */
+   int xwayland_disable_extensions;
++
++  /* Whether Xwayland should allow X11 clients from different endianess */
++  gboolean xwayland_allow_byte_swapped_clients;
+ };
+ 
+ G_DEFINE_TYPE (MetaSettings, meta_settings, G_TYPE_OBJECT)
+@@ -429,6 +432,15 @@ update_privacy_settings (MetaSettings *settings)
+                             settings);
+ }
+ 
++static void
++update_xwayland_allow_byte_swapped_clients (MetaSettings *settings)
++{
++
++  settings->xwayland_allow_byte_swapped_clients =
++    g_settings_get_flags (settings->wayland_settings,
++                          "xwayland-allow-byte-swapped-clients");
++}
++
+ static void
+ wayland_settings_changed (GSettings    *wayland_settings,
+                           gchar        *key,
+@@ -447,6 +459,10 @@ wayland_settings_changed (GSettings    *wayland_settings,
+     {
+       update_xwayland_disable_extensions (settings);
+     }
++  else if (g_str_equal (key, "xwayland-allow-byte-swapped-clients"))
++    {
++      update_xwayland_allow_byte_swapped_clients (settings);
++    }
+ }
+ 
+ void
+@@ -470,6 +486,13 @@ meta_settings_get_xwayland_disable_extensions (MetaSettings *settings)
+   return (settings->xwayland_disable_extensions);
+ }
+ 
++gboolean
++meta_settings_are_xwayland_byte_swapped_clients_allowed (MetaSettings *settings)
++{
++
++  return settings->xwayland_allow_byte_swapped_clients;
++}
++
+ gboolean
+ meta_settings_is_privacy_screen_enabled (MetaSettings *settings)
+ {
+-- 
+2.39.0
+
