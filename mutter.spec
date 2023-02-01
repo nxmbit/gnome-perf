@@ -12,7 +12,7 @@
 
 Name:          mutter
 Version:       43.2
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Window and compositing manager based on Clutter
 
 License:       GPLv2+
@@ -28,12 +28,15 @@ Patch1:        0001-Revert-build-Do-not-provide-built-sources-as-libmutt.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=1936991
 Patch2:        mutter-42.alpha-disable-tegra.patch
 
+# Backports that will be part of 43.3
+Patch3:        post-43.2-backports.patch
+
 # Only on F38 and later
 %if 0%{?fedora} >= 38
 # Add Xwayland byte-swapped clients support
 # https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2785
-Patch3: 0001-settings-Add-Xwayland-byte-swapped-clients.patch
-Patch4: 0002-xwayland-Add-support-for-byte-swapped-clients.patch
+Patch4: 0001-settings-Add-Xwayland-byte-swapped-clients.patch
+Patch5: 0002-xwayland-Add-support-for-byte-swapped-clients.patch
 %endif
 
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
@@ -181,6 +184,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 %{_datadir}/mutter-%{mutter_api_version}/tests
 
 %changelog
+* Fri Feb 10 2023 Jonas Ådahl <jadahl@redhat.com> - 43.2-2
+- Backport patches on the gnome-43 branch
+
 * Fri Feb 10 2023 Adam Williamson <awilliam@redhat.com> - 43.2-1
 - Update to 43.2
 
