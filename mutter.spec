@@ -12,7 +12,7 @@
 
 Name:          mutter
 Version:       43.1
-Release:       5%{?dist}
+Release:       6%{?dist}
 Summary:       Window and compositing manager based on Clutter
 
 License:       GPLv2+
@@ -74,6 +74,7 @@ BuildRequires: pkgconfig(libsystemd)
 BuildRequires: xorg-x11-server-Xorg
 BuildRequires: xorg-x11-server-Xvfb
 BuildRequires: pkgconfig(xkeyboard-config)
+# see src/tests/x11-test.sh
 BuildRequires: zenity
 BuildRequires: desktop-file-utils
 # Bootstrap requirements
@@ -106,7 +107,6 @@ Requires: libinput%{?_isa} >= %{libinput_version}
 Requires: pipewire%{_isa} >= %{pipewire_version}
 Requires: startup-notification
 Requires: dbus
-Requires: zenity
 
 Recommends: mesa-dri-drivers%{?_isa}
 
@@ -188,6 +188,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 %{_datadir}/mutter-%{mutter_api_version}/tests
 
 %changelog
+* Fri Feb 10 2023 Adam Williamson <awilliam@redhat.com> - 43.1-6
+- Drop zenity requirement (upstream dropped it in 43-alpha)
+
 * Sun Jan 29 2023 Stefan Bluhm <stefan.bluhm@clacee.eu> - 43.1-5
 - Fixed broken Fedora condition.
 
