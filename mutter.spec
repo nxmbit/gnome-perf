@@ -11,8 +11,8 @@
 %global tarball_version %%(echo %{version} | tr '~' '.')
 
 Name:          mutter
-Version:       43.1
-Release:       6%{?dist}
+Version:       43.2
+Release:       1%{?dist}
 Summary:       Window and compositing manager based on Clutter
 
 License:       GPLv2+
@@ -28,19 +28,12 @@ Patch1:        0001-Revert-build-Do-not-provide-built-sources-as-libmutt.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=1936991
 Patch2:        mutter-42.alpha-disable-tegra.patch
 
-# Revert Clutter optimization causing issues on X11
-# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2667
-# Will be replaced with a proper fix in 43.2
-# Backport edge resistance fix
-# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2687
-Patch3:        post-43.1-fixes.patch
-
 # Only on F38 and later
 %if 0%{?fedora} >= 38
 # Add Xwayland byte-swapped clients support
 # https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/2785
-Patch4: 0001-settings-Add-Xwayland-byte-swapped-clients.patch
-Patch5: 0002-xwayland-Add-support-for-byte-swapped-clients.patch
+Patch3: 0001-settings-Add-Xwayland-byte-swapped-clients.patch
+Patch4: 0002-xwayland-Add-support-for-byte-swapped-clients.patch
 %endif
 
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
@@ -188,6 +181,9 @@ desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
 %{_datadir}/mutter-%{mutter_api_version}/tests
 
 %changelog
+* Fri Feb 10 2023 Adam Williamson <awilliam@redhat.com> - 43.2-1
+- Update to 43.2
+
 * Fri Feb 10 2023 Adam Williamson <awilliam@redhat.com> - 43.1-6
 - Drop zenity requirement (upstream dropped it in 43-alpha)
 
