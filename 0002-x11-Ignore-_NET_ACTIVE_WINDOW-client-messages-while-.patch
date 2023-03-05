@@ -1,0 +1,101 @@
+From 184c4fd7b8d13767ce8fd525040b211c1f133dbf Mon Sep 17 00:00:00 2001
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Tue, 28 Feb 2023 22:02:05 +0100
+Subject: [PATCH 2/3] x11: Ignore _NET_ACTIVE_WINDOW client messages while
+ grabbed
+
+When a X11 application is started, typically what happens is:
+
+- A startup notification token is created, with a _TIME%d suffix
+- The application being spawned receives it through the environment
+- (dbus piping, maybe)
+- The application replies the startup notification token, and
+  fetches the timestamp from it
+- The application makes a _NET_ACTIVE_WINDOW client message request
+  with this timestamp
+- Mutter handles this client request and activates/focuses the window
+
+Prevent this last step if windows are not interactable (e.g. there is
+a compositor grab) and ignore the focus request. This specifically
+applies to X11 clients requesting focus themselves, and unlike previous
+approaches, doesn't try to prevent focus changes that do come through
+interaction with Mutter/GNOME Shell.
+
+This should only break if applications do not observe _NET_ACTIVE_WINDOW
+and perform XSetInputFocus on themselves, but in that case the X11
+keyboard focus is stolen from our hands already.
+---
+ src/x11/window-x11.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/x11/window-x11.c b/src/x11/window-x11.c
+index 34dbeb855..36728555a 100644
+--- a/src/x11/window-x11.c
++++ b/src/x11/window-x11.c
+@@ -3421,61 +3421,62 @@ meta_window_x11_client_message (MetaWindow *window,
+ 
+               if (window_drag && (button_mask & (1 << button)) == 0)
+                 meta_window_drag_end (window_drag);
+             }
+         }
+ 
+       return TRUE;
+     }
+   else if (event->xclient.message_type ==
+            x11_display->atom__NET_MOVERESIZE_WINDOW)
+     {
+       MetaGravity gravity;
+       guint value_mask;
+ 
+       gravity = (MetaGravity) (event->xclient.data.l[0] & 0xff);
+       value_mask = (event->xclient.data.l[0] & 0xf00) >> 8;
+       /* source = (event->xclient.data.l[0] & 0xf000) >> 12; */
+ 
+       if (gravity == 0)
+         gravity = window->size_hints.win_gravity;
+ 
+       meta_window_move_resize_request(window,
+                                       value_mask,
+                                       gravity,
+                                       event->xclient.data.l[1],  /* x */
+                                       event->xclient.data.l[2],  /* y */
+                                       event->xclient.data.l[3],  /* width */
+                                       event->xclient.data.l[4]); /* height */
+     }
+   else if (event->xclient.message_type ==
+-           x11_display->atom__NET_ACTIVE_WINDOW)
++           x11_display->atom__NET_ACTIVE_WINDOW &&
++           meta_display_windows_are_interactable (window->display))
+     {
+       MetaClientType source_indication;
+       guint32        timestamp;
+ 
+       meta_verbose ("_NET_ACTIVE_WINDOW request for window '%s', activating",
+                     window->desc);
+ 
+       source_indication = event->xclient.data.l[0];
+       timestamp = event->xclient.data.l[1];
+ 
+       if (source_indication > META_CLIENT_TYPE_MAX_RECOGNIZED)
+         source_indication = META_CLIENT_TYPE_UNKNOWN;
+ 
+       if (timestamp == 0)
+         {
+           /* Client using older EWMH _NET_ACTIVE_WINDOW without a timestamp */
+           meta_warning ("Buggy client sent a _NET_ACTIVE_WINDOW message with a "
+                         "timestamp of 0 for %s",
+                         window->desc);
+           timestamp = meta_display_get_current_time (display);
+         }
+ 
+       meta_window_activate_full (window, timestamp, source_indication, NULL);
+       return TRUE;
+     }
+   else if (event->xclient.message_type ==
+            x11_display->atom__NET_WM_FULLSCREEN_MONITORS)
+     {
+       MetaLogicalMonitor *top, *bottom, *left, *right;
+ 
+-- 
+2.39.2
+
