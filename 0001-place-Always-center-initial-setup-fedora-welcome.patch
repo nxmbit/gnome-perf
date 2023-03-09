@@ -1,4 +1,4 @@
-From cc057095ba4d4a9500163ec646a8bf134e9dd04a Mon Sep 17 00:00:00 2001
+From 00e208334c42ce0e0de1dc392ca4663dbc818c09 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Florian=20M=C3=BCllner?= <fmuellner@gnome.org>
 Date: Fri, 2 Dec 2022 22:49:41 +0100
 Subject: [PATCH] place: Always center initial-setup/fedora-welcome
@@ -8,20 +8,20 @@ Subject: [PATCH] place: Always center initial-setup/fedora-welcome
  1 file changed, 4 insertions(+)
 
 diff --git a/src/core/place.c b/src/core/place.c
-index 1075fe20d..35794ea6e 100644
+index f9877dfc7..58d3285bc 100644
 --- a/src/core/place.c
 +++ b/src/core/place.c
-@@ -320,6 +320,10 @@ window_place_centered (MetaWindow *window)
+@@ -321,6 +321,10 @@ window_place_centered (MetaWindow *window)
  
    type = window->type;
  
-+  if (g_str_equal (meta_window_get_wm_class (window), "org.gnome.InitalSetup") ||
-+      g_str_equal (meta_window_get_wm_class (window), "fedora-welcome"))
++  if (g_strcmp0 (meta_window_get_wm_class (window), "org.gnome.InitalSetup") == 0 ||
++      g_strcmp0 (meta_window_get_wm_class (window), "fedora-welcome") == 0)
 +    return TRUE;
 +
    return (type == META_WINDOW_DIALOG ||
      type == META_WINDOW_MODAL_DIALOG ||
      type == META_WINDOW_SPLASHSCREEN ||
 -- 
-2.38.1
+2.39.2
 
