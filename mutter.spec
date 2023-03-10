@@ -13,7 +13,7 @@
 
 Name:          mutter
 Version:       44~rc
-Release:       3%{?dist}
+Release:       4%{?dist}
 Summary:       Window and compositing manager based on Clutter
 
 License:       GPLv2+
@@ -179,6 +179,10 @@ the functionality of the installed %{name} package.
 %{_datadir}/mutter-%{mutter_api_version}/tests
 
 %changelog
+* Fri Mar 10 2023 Florian Müllner <fmuellner@redhat.com> - 44~rc-4
+- Fix typo in centering patch
+- Also check for possible future fedora-welcome ID
+
 * Thu Mar 09 2023 Adam Williamson <awilliam@redhat.com> - 44~rc-3
 - From Florian: adjust centering patch to not crash on null values
 - Backport MR #2906 to fix g-i-s startup problems (#2176700)
