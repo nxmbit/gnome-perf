@@ -1,0 +1,277 @@
+From 670c7cf4ccb1bd1ffa6e44507a8ffd734b0f72e4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Jonas=20=C3=85dahl?= <jadahl@gmail.com>
+Date: Tue, 14 Mar 2023 17:28:24 +0100
+Subject: [PATCH] monitor-manager: Apply switch-config in idle callback
+
+Just as with restoring the previous monitor configuration in case the
+user clicked "revert" in GNOME Shell's monitor configuration
+confirmation dialog, we need to do switch configs in an idle callback as
+well.
+
+Closes: https://gitlab.gnome.org/GNOME/mutter/-/issues/2694
+---
+ src/backends/meta-monitor-manager.c |  61 +++++++++++---
+ src/tests/native-kms-hotplug.c      | 119 ++++++++++++++++++++++++++++
+ 2 files changed, 167 insertions(+), 13 deletions(-)
+
+diff --git a/src/backends/meta-monitor-manager.c b/src/backends/meta-monitor-manager.c
+index 19cbb263d2..9b24294e89 100644
+--- a/src/backends/meta-monitor-manager.c
++++ b/src/backends/meta-monitor-manager.c
+@@ -116,6 +116,8 @@ typedef struct _MetaMonitorManagerPrivate
+   gboolean has_builtin_panel;
+   gboolean night_light_supported;
+   const char *experimental_hdr;
++
++  guint switch_config_handle_id;
+ } MetaMonitorManagerPrivate;
+ 
+ G_DEFINE_TYPE_WITH_PRIVATE (MetaMonitorManager, meta_monitor_manager,
+@@ -1356,6 +1358,8 @@ static void
+ meta_monitor_manager_dispose (GObject *object)
+ {
+   MetaMonitorManager *manager = META_MONITOR_MANAGER (object);
++  MetaMonitorManagerPrivate *priv =
++    meta_monitor_manager_get_instance_private (manager);
+ 
+   g_clear_handle_id (&manager->dbus_name_id, g_bus_unown_name);
+ 
+@@ -1367,6 +1371,7 @@ meta_monitor_manager_dispose (GObject *object)
+ 
+   g_clear_handle_id (&manager->persistent_timeout_id, g_source_remove);
+   g_clear_handle_id (&manager->restore_config_id, g_source_remove);
++  g_clear_handle_id (&priv->switch_config_handle_id, g_source_remove);
+ 
+   G_OBJECT_CLASS (meta_monitor_manager_parent_class)->dispose (object);
+ }
+@@ -3873,35 +3878,65 @@ meta_monitor_manager_rotate_monitor (MetaMonitorManager *manager)
+   g_object_unref (config);
+ }
+ 
+-void
+-meta_monitor_manager_switch_config (MetaMonitorManager          *manager,
+-                                    MetaMonitorSwitchConfigType  config_type)
++typedef struct
+ {
+-  GError *error = NULL;
+-  MetaMonitorsConfig *config;
++  MetaMonitorManager *monitor_manager;
++  MetaMonitorSwitchConfigType config_type;
++} SwitchConfigData;
+ 
+-  g_return_if_fail (config_type != META_MONITOR_SWITCH_CONFIG_UNKNOWN);
++static gboolean
++switch_config_idle_cb (gpointer user_data)
++{
++  SwitchConfigData *data = user_data;
++  MetaMonitorManager *monitor_manager = data->monitor_manager;
++  MetaMonitorManagerPrivate *priv =
++    meta_monitor_manager_get_instance_private (monitor_manager);
++  MetaMonitorConfigManager *config_manager = monitor_manager->config_manager;
++  MetaMonitorsConfig *config;
++  g_autoptr (GError) error = NULL;
+ 
+   config =
+-    meta_monitor_config_manager_create_for_switch_config (manager->config_manager,
+-                                                          config_type);
++    meta_monitor_config_manager_create_for_switch_config (config_manager,
++                                                          data->config_type);
+   if (!config)
+-    return;
++    return G_SOURCE_REMOVE;
+ 
+-  if (!meta_monitor_manager_apply_monitors_config (manager,
++  if (!meta_monitor_manager_apply_monitors_config (monitor_manager,
+                                                    config,
+                                                    META_MONITORS_CONFIG_METHOD_TEMPORARY,
+                                                    &error))
+     {
+       g_warning ("Failed to use switch monitor configuration: %s",
+                  error->message);
+-      g_error_free (error);
+     }
+   else
+     {
+-      manager->current_switch_config = config_type;
++      monitor_manager->current_switch_config = data->config_type;
+     }
+-  g_object_unref (config);
++
++  priv->switch_config_handle_id = 0;
++  return G_SOURCE_REMOVE;
++}
++
++void
++meta_monitor_manager_switch_config (MetaMonitorManager          *manager,
++                                    MetaMonitorSwitchConfigType  config_type)
++{
++  MetaMonitorManagerPrivate *priv =
++    meta_monitor_manager_get_instance_private (manager);
++  SwitchConfigData *data;
++
++  g_return_if_fail (config_type != META_MONITOR_SWITCH_CONFIG_UNKNOWN);
++
++  data = g_new0 (SwitchConfigData, 1);
++  data->monitor_manager = manager;
++  data->config_type = config_type;
++
++  g_clear_handle_id (&priv->switch_config_handle_id, g_source_remove);
++  priv->switch_config_handle_id = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
++                                                   switch_config_idle_cb,
++                                                   data,
++                                                   g_free);
+ }
+ 
+ gboolean
+diff --git a/src/tests/native-kms-hotplug.c b/src/tests/native-kms-hotplug.c
+index 4a6f2e0aac..3c60aa10a5 100644
+--- a/src/tests/native-kms-hotplug.c
++++ b/src/tests/native-kms-hotplug.c
+@@ -17,11 +17,16 @@
+ 
+ #include "config.h"
+ 
++#include <linux/input-event-codes.h>
++
++#include "backends/meta-logical-monitor.h"
+ #include "backends/meta-monitor-manager-private.h"
++#include "backends/meta-virtual-monitor.h"
+ #include "backends/native/meta-backend-native.h"
+ #include "backends/native/meta-udev.h"
+ #include "meta-test/meta-context-test.h"
+ #include "tests/drm-mock/drm-mock.h"
++#include "tests/meta-test-utils.h"
+ 
+ typedef enum _State
+ {
+@@ -207,6 +212,118 @@ meta_test_disconnect_connect (void)
+   g_signal_handler_disconnect (stage, presented_handler_id);
+ }
+ 
++static gboolean
++on_key_release (ClutterActor       *actor,
++                const ClutterEvent *event,
++                MetaMonitorManager *monitor_manager)
++{
++  if (clutter_event_get_key_symbol (event) == CLUTTER_KEY_a)
++    {
++      g_debug ("Switching config");
++      meta_monitor_manager_switch_config (monitor_manager,
++                                          META_MONITOR_SWITCH_CONFIG_ALL_MIRROR);
++    }
++
++  return TRUE;
++}
++
++static void
++on_monitors_changed (MetaMonitorManager *monitor_manager,
++                     gboolean           *monitors_changed)
++{
++  *monitors_changed = TRUE;
++}
++
++static void
++meta_test_switch_config (void)
++{
++  MetaBackend *backend = meta_context_get_backend (test_context);
++  MetaMonitorManager *monitor_manager =
++    meta_backend_get_monitor_manager (backend);
++  ClutterActor *stage = meta_backend_get_stage (backend);
++  ClutterSeat *seat = meta_backend_get_default_seat (backend);
++  g_autoptr (ClutterVirtualInputDevice) virtual_keyboard = NULL;
++  g_autoptr (MetaVirtualMonitor) virtual_monitor = NULL;
++  GList *logical_monitors;
++  MetaRectangle logical_monitor_layout;
++  gulong after_paint_handler_id;
++  gulong presented_handler_id;
++  gboolean monitors_changed;
++  g_autoptr (GError) error = NULL;
++  ClutterActor *actor;
++  State state;
++
++  after_paint_handler_id = g_signal_connect (stage, "after-paint",
++                                             G_CALLBACK (on_after_paint),
++                                             &state);
++  presented_handler_id = g_signal_connect (stage, "presented",
++                                           G_CALLBACK (on_presented),
++                                           &state);
++  g_signal_connect (monitor_manager, "monitors-changed",
++                    G_CALLBACK (on_monitors_changed),
++                    &monitors_changed);
++
++  logical_monitors =
++    meta_monitor_manager_get_logical_monitors (monitor_manager);
++  g_assert_cmpuint (g_list_length (logical_monitors), ==, 1);
++  logical_monitor_layout =
++    meta_logical_monitor_get_layout (logical_monitors->data);
++
++  virtual_monitor = meta_create_test_monitor (test_context,
++                                              logical_monitor_layout.width,
++                                              logical_monitor_layout.height,
++                                              60.0);
++
++  actor = clutter_actor_new ();
++  g_object_add_weak_pointer (G_OBJECT (actor), (gpointer *) &actor);
++  clutter_actor_insert_child_above (stage,
++                                    actor,
++                                    clutter_actor_get_first_child (stage));
++  clutter_actor_set_size (actor,
++                          logical_monitor_layout.width,
++                          logical_monitor_layout.height);
++  clutter_actor_set_position (actor, 0, 0);
++  clutter_actor_set_reactive (actor, TRUE);
++  clutter_actor_show (actor);
++  clutter_actor_grab_key_focus (actor);
++  g_signal_connect (actor, "key-press-event",
++                    G_CALLBACK (on_key_release),
++                    monitor_manager);
++
++  monitors_changed = FALSE;
++  g_signal_connect (monitor_manager, "monitors-changed",
++                    G_CALLBACK (on_monitors_changed),
++                    &monitors_changed);
++
++  g_debug ("Sending virtual keyboard event");
++  virtual_keyboard =
++    clutter_seat_create_virtual_device (seat, CLUTTER_KEYBOARD_DEVICE);
++  clutter_virtual_input_device_notify_key (virtual_keyboard,
++                                           CLUTTER_CURRENT_TIME,
++                                           KEY_A,
++                                           CLUTTER_KEY_STATE_PRESSED);
++  clutter_virtual_input_device_notify_key (virtual_keyboard,
++                                           CLUTTER_CURRENT_TIME,
++                                           KEY_A,
++                                           CLUTTER_KEY_STATE_RELEASED);
++
++  g_debug ("Waiting for monitors changed");
++  while (!monitors_changed)
++    g_main_context_iteration (NULL, TRUE);
++
++  g_debug ("Waiting for being repainted");
++  state = INIT;
++  clutter_actor_queue_redraw (stage);
++  while (state != PRESENTED)
++    g_main_context_iteration (NULL, TRUE);
++
++  clutter_actor_destroy (actor);
++  g_assert_null (actor);
++
++  g_signal_handler_disconnect (stage, after_paint_handler_id);
++  g_signal_handler_disconnect (stage, presented_handler_id);
++}
++
+ static void
+ init_tests (void)
+ {
+@@ -214,6 +331,8 @@ init_tests (void)
+                    meta_test_reload);
+   g_test_add_func ("/hotplug/disconnect-connect",
+                    meta_test_disconnect_connect);
++  g_test_add_func ("/hotplug/switch-config",
++                   meta_test_switch_config);
+ }
+ 
+ int
+-- 
+GitLab
+
