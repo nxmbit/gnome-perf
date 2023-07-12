@@ -87,7 +87,6 @@ BuildRequires: pkgconfig(xwayland)
 Requires: control-center-filesystem
 Requires: gsettings-desktop-schemas%{?_isa} >= %{gsettings_desktop_schemas_version}
 Requires: gnome-settings-daemon
-Requires: gtk3%{?_isa} >= %{gtk3_version}
 Requires: gtk4%{?_isa} >= %{gtk4_version}
 Requires: json-glib%{?_isa} >= %{json_glib_version}
 Requires: libinput%{?_isa} >= %{libinput_version}
@@ -129,6 +128,7 @@ utilities for testing Metacity/Mutter themes.
 %package  tests
 Summary:  Tests for the %{name} package
 Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires: gtk3%{?_isa} >= %{gtk3_version}
 
 %description tests
 The %{name}-tests package contains tests that can be used to verify
