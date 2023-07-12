@@ -60,7 +60,6 @@ BuildRequires: pkgconfig(libsystemd)
 BuildRequires: xorg-x11-server-Xorg
 BuildRequires: xorg-x11-server-Xvfb
 BuildRequires: pkgconfig(xkeyboard-config)
-# src/tests/x11-test.sh uses zenity but we don't ship that test
 BuildRequires: desktop-file-utils
 # Bootstrap requirements
 BuildRequires: gettext-devel git-core
