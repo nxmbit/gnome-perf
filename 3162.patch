@@ -1,0 +1,57 @@
+From 69ce2cc5cf1f4759afea7fd3429c9f33b6d07919 Mon Sep 17 00:00:00 2001
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Tue, 8 Aug 2023 16:04:25 +0200
+Subject: [PATCH] backends/native: Fix handling order of key event
+
+First create the event with the current xkb modifier mask, then
+update the xkb_state and the modifier mask. This is how it happened
+before commit 2e8d8397081, and how it should stay.
+
+Fixes: 2e8d8397081 ("backends/native: Port to new event constructors")
+
+Closes: https://gitlab.gnome.org/GNOME/mutter/-/issues/2951
+---
+ src/backends/native/meta-seat-impl.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/src/backends/native/meta-seat-impl.c b/src/backends/native/meta-seat-impl.c
+index 0c26647b43..77eb4faac6 100644
+--- a/src/backends/native/meta-seat-impl.c
++++ b/src/backends/native/meta-seat-impl.c
+@@ -415,16 +415,6 @@ meta_seat_impl_notify_key_in_impl (MetaSeatImpl       *seat_impl,
+           return;
+         }
+     }
+-
+-  keycode = meta_xkb_evdev_to_keycode (key);
+-
+-  /* We must be careful and not pass multiple releases to xkb, otherwise it gets
+-     confused and locks the modifiers */
+-  if (state != AUTOREPEAT_VALUE)
+-    {
+-      changed_state = xkb_state_update_key (seat_impl->xkb, keycode,
+-                                            state ? XKB_KEY_DOWN : XKB_KEY_UP);
+-    }
+   else
+     {
+       changed_state = 0;
+@@ -438,6 +428,16 @@ meta_seat_impl_notify_key_in_impl (MetaSeatImpl       *seat_impl,
+                                          seat_impl->button_state,
+                                          time_us, key, state);
+ 
++  keycode = meta_xkb_evdev_to_keycode (key);
++
++  /* We must be careful and not pass multiple releases to xkb, otherwise it gets
++     confused and locks the modifiers */
++  if (state != AUTOREPEAT_VALUE)
++    {
++      changed_state = xkb_state_update_key (seat_impl->xkb, keycode,
++                                            state ? XKB_KEY_DOWN : XKB_KEY_UP);
++    }
++
+   if (!meta_input_device_native_process_kbd_a11y_event_in_impl (seat_impl->core_keyboard,
+                                                                 event))
+     queue_event (seat_impl, event);
+-- 
+GitLab
+
