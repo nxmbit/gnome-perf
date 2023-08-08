@@ -35,6 +35,9 @@ Patch2:        0001-place-Always-center-initial-setup-fedora-welcome.patch
 # https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/3162
 Patch3:        3162.patch
 
+# https://gitlab.gnome.org/GNOME/mutter/-/issues/2918#note_1810692
+Patch4:        0001-Revert-compositor-Do-not-repick-after-effects-finish.patch
+
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
 BuildRequires: pkgconfig(libwacom)

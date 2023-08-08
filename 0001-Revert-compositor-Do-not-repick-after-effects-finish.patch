@@ -1,0 +1,43 @@
+From 3bb8445dbdd5600a8ce115a2e82a527f32246c13 Mon Sep 17 00:00:00 2001
+From: Kalev Lember <klember@redhat.com>
+Date: Tue, 8 Aug 2023 17:15:34 +0200
+Subject: [PATCH] Revert "compositor: Do not repick after effects finish"
+
+Revert a change that likely caused mouse clicks to go missing in openQA
+tests.
+
+https://gitlab.gnome.org/GNOME/mutter/-/issues/2918#note_1810692
+
+This reverts commit 281d896f6ad30b114f17b0ac6eb1eaf6f394e956.
+---
+ src/compositor/meta-window-actor.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/compositor/meta-window-actor.c b/src/compositor/meta-window-actor.c
+index f5bed5166..07d005cef 100644
+--- a/src/compositor/meta-window-actor.c
++++ b/src/compositor/meta-window-actor.c
+@@ -683,6 +683,11 @@ meta_window_actor_after_effects (MetaWindowActor *self)
+ {
+   MetaWindowActorPrivate *priv =
+     meta_window_actor_get_instance_private (self);
++  ClutterStage *stage;
++  ClutterSeat *seat;
++
++  stage = CLUTTER_STAGE (clutter_actor_get_stage (CLUTTER_ACTOR (self)));
++  seat = clutter_backend_get_default_seat (clutter_get_default_backend ());
+ 
+   if (priv->needs_destroy)
+     {
+@@ -694,6 +699,8 @@ meta_window_actor_after_effects (MetaWindowActor *self)
+       meta_window_actor_sync_visibility (self);
+       meta_window_actor_sync_actor_geometry (self, FALSE);
+     }
++
++  clutter_stage_repick_device (stage, clutter_seat_get_pointer (seat));
+ }
+ 
+ void
+-- 
+2.41.0
+
