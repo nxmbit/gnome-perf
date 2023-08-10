@@ -39,6 +39,11 @@ Patch3:        3162.patch
 # https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/3168
 Patch4:        3168.patch
 
+# Needed to fix broken alt-tab (along with gnome-shell patches)
+# https://gitlab.gnome.org/GNOME/mutter/-/issues/2950
+# https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/3163
+Patch5:        3163.patch
+
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
 BuildRequires: pkgconfig(libwacom)

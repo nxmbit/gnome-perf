@@ -1,0 +1,346 @@
+From 1d6d8d45d0991cc72fe386ab9552b08cc039e7fb Mon Sep 17 00:00:00 2001
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Wed, 9 Aug 2023 00:23:28 +0200
+Subject: [PATCH] clutter: Update ClutterActorClass event vmethods to use
+ ClutterEvent
+
+With the ClutterEvent subtype structs sealed, this remains the only useful
+struct type that is now usable on the Javascript side. Make all
+ClutterActorClass event vmethods use ClutterEvent, and update all users
+to this change.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/3163>
+---
+ clutter/clutter/clutter-actor.c               | 16 +++---
+ clutter/clutter/clutter-actor.h               | 18 +++----
+ clutter/clutter/clutter-binding-pool.c        |  4 +-
+ clutter/clutter/clutter-gesture-action.c      |  4 +-
+ clutter/clutter/clutter-text.c                | 52 +++++++++----------
+ src/tests/clutter/conform/binding-pool.c      |  8 +--
+ .../clutter/interactive/test-binding-pool.c   |  8 +--
+ 7 files changed, 54 insertions(+), 56 deletions(-)
+
+diff --git a/clutter/clutter/clutter-actor.c b/clutter/clutter/clutter-actor.c
+index 017b859e4f..99b42cfe9d 100644
+--- a/clutter/clutter/clutter-actor.c
++++ b/clutter/clutter/clutter-actor.c
+@@ -6963,7 +6963,7 @@ clutter_actor_class_init (ClutterActorClass *klass)
+   /**
+    * ClutterActor::button-press-event:
+    * @actor: the actor which received the event
+-   * @event: (type ClutterButtonEvent): a #ClutterButtonEvent
++   * @event: (type ClutterEvent): a button [struct@Event]
+    *
+    * The signal is emitted each time a mouse button
+    * is pressed on @actor.
+@@ -6986,7 +6986,7 @@ clutter_actor_class_init (ClutterActorClass *klass)
+   /**
+    * ClutterActor::button-release-event:
+    * @actor: the actor which received the event
+-   * @event: (type ClutterButtonEvent): a #ClutterButtonEvent
++   * @event: (type ClutterEvent): a button [struct@Event]
+    *
+    * The signal is emitted each time a mouse button
+    * is released on @actor.
+@@ -7009,7 +7009,7 @@ clutter_actor_class_init (ClutterActorClass *klass)
+   /**
+    * ClutterActor::scroll-event:
+    * @actor: the actor which received the event
+-   * @event: (type ClutterScrollEvent): a #ClutterScrollEvent
++   * @event: (type ClutterEvent): a scroll [struct@Event]
+    *
+    * The signal is emitted each time the mouse is
+    * scrolled on @actor
+@@ -7032,7 +7032,7 @@ clutter_actor_class_init (ClutterActorClass *klass)
+   /**
+    * ClutterActor::key-press-event:
+    * @actor: the actor which received the event
+-   * @event: (type ClutterKeyEvent): a #ClutterKeyEvent
++   * @event: (type ClutterEvent): a key [struct@Event]
+    *
+    * The signal is emitted each time a keyboard button
+    * is pressed while @actor has key focus (see clutter_stage_set_key_focus()).
+@@ -7055,7 +7055,7 @@ clutter_actor_class_init (ClutterActorClass *klass)
+   /**
+    * ClutterActor::key-release-event:
+    * @actor: the actor which received the event
+-   * @event: (type ClutterKeyEvent): a #ClutterKeyEvent
++   * @event: (type ClutterEvent): a key [struct@Event]
+    *
+    * The signal is emitted each time a keyboard button
+    * is released while @actor has key focus (see
+@@ -7079,7 +7079,7 @@ clutter_actor_class_init (ClutterActorClass *klass)
+   /**
+    * ClutterActor::motion-event:
+    * @actor: the actor which received the event
+-   * @event: (type ClutterMotionEvent): a #ClutterMotionEvent
++   * @event: (type ClutterEvent): a motion [struct@Event]
+    *
+    * The signal is emitted each time the mouse pointer is
+    * moved over @actor.
+@@ -7131,7 +7131,7 @@ clutter_actor_class_init (ClutterActorClass *klass)
+   /**
+    * ClutterActor::enter-event:
+    * @actor: the actor which the pointer has entered.
+-   * @event: (type ClutterCrossingEvent): a #ClutterCrossingEvent
++   * @event: (type ClutterEvent): a crossing [struct@Event]
+    *
+    * The signal is emitted when the pointer enters the @actor
+    *
+@@ -7154,7 +7154,7 @@ clutter_actor_class_init (ClutterActorClass *klass)
+   /**
+    * ClutterActor::leave-event:
+    * @actor: the actor which the pointer has left
+-   * @event: (type ClutterCrossingEvent): a #ClutterCrossingEvent
++   * @event: (type ClutterEvent): a crossing [struct@Event]
+    *
+    * The signal is emitted when the pointer leaves the @actor.
+    *
+diff --git a/clutter/clutter/clutter-actor.h b/clutter/clutter/clutter-actor.h
+index 46298c74fb..9c0dc82c54 100644
+--- a/clutter/clutter/clutter-actor.h
++++ b/clutter/clutter/clutter-actor.h
+@@ -236,21 +236,21 @@ struct _ClutterActorClass
+   gboolean (* event)                (ClutterActor         *actor,
+                                      ClutterEvent         *event);
+   gboolean (* button_press_event)   (ClutterActor         *actor,
+-                                     ClutterButtonEvent   *event);
++                                     ClutterEvent         *event);
+   gboolean (* button_release_event) (ClutterActor         *actor,
+-                                     ClutterButtonEvent   *event);
++                                     ClutterEvent         *event);
+   gboolean (* scroll_event)         (ClutterActor         *actor,
+-                                     ClutterScrollEvent   *event);
++                                     ClutterEvent         *event);
+   gboolean (* key_press_event)      (ClutterActor         *actor,
+-                                     ClutterKeyEvent      *event);
++                                     ClutterEvent         *event);
+   gboolean (* key_release_event)    (ClutterActor         *actor,
+-                                     ClutterKeyEvent      *event);
++                                     ClutterEvent         *event);
+   gboolean (* motion_event)         (ClutterActor         *actor,
+-                                     ClutterMotionEvent   *event);
++                                     ClutterEvent         *event);
+   gboolean (* enter_event)          (ClutterActor         *actor,
+-                                     ClutterCrossingEvent *event);
++                                     ClutterEvent         *event);
+   gboolean (* leave_event)          (ClutterActor         *actor,
+-                                     ClutterCrossingEvent *event);
++                                     ClutterEvent         *event);
+   gboolean (* captured_event)       (ClutterActor         *actor,
+                                      ClutterEvent         *event);
+   void     (* key_focus_in)         (ClutterActor         *actor);
+@@ -270,7 +270,7 @@ struct _ClutterActorClass
+                                      ClutterPaintNode     *root);
+ 
+   gboolean (* touch_event)          (ClutterActor         *self,
+-                                     ClutterTouchEvent    *event);
++                                     ClutterEvent         *event);
+   gboolean (* has_accessible)       (ClutterActor         *self);
+   void     (* resource_scale_changed) (ClutterActor *self);
+   float    (* calculate_resource_scale) (ClutterActor *self,
+diff --git a/clutter/clutter/clutter-binding-pool.c b/clutter/clutter/clutter-binding-pool.c
+index a01b5edde0..2a1e529e86 100644
+--- a/clutter/clutter/clutter-binding-pool.c
++++ b/clutter/clutter/clutter-binding-pool.c
+@@ -69,8 +69,8 @@
+  * ```
+  *
+  * The actor should then override the [signal@Actor::key-press-event] and
+- * use [method@BindingPool.activate] to match a [struct@KeyEvent] structure
+- * to one of the actions:
++ * use [method@BindingPool.activate] to match a [struct@Event] key event
++ * structure to one of the actions:
+  *
+  * ```c
+  *   ClutterBindingPool *pool;
+diff --git a/clutter/clutter/clutter-gesture-action.c b/clutter/clutter/clutter-gesture-action.c
+index b562279f5f..35e401a156 100644
+--- a/clutter/clutter/clutter-gesture-action.c
++++ b/clutter/clutter/clutter-gesture-action.c
+@@ -30,8 +30,8 @@
+  * Action for gesture gestures
+  *
+  * #ClutterGestureAction is a sub-class of [class@Action] that implements
+- * the logic for recognizing gesture gestures. It listens for low level events
+- * such as [struct@ButtonEvent] and [struct@MotionEvent] on the stage to raise
++ * the logic for recognizing gesture gestures. It listens for low level
++ * [struct@Event] events on the stage to raise
+  * the [signal@GestureAction::gesture-begin], [signal@GestureAction::gesture-progress],
+  * and [signal@GestureAction::gesture-end] signals.
+  *
+diff --git a/clutter/clutter/clutter-text.c b/clutter/clutter/clutter-text.c
+index 2b6a8716f6..9f0f17c31c 100644
+--- a/clutter/clutter/clutter-text.c
++++ b/clutter/clutter/clutter-text.c
+@@ -2365,42 +2365,42 @@ clutter_text_release (ClutterActor *actor,
+ }
+ 
+ static gboolean
+-clutter_text_button_press (ClutterActor       *actor,
+-                           ClutterButtonEvent *event)
++clutter_text_button_press (ClutterActor *actor,
++                           ClutterEvent *event)
+ {
+-  return clutter_text_press (actor, (ClutterEvent *) event);
++  return clutter_text_press (actor, event);
+ }
+ 
+ static gboolean
+-clutter_text_motion (ClutterActor       *actor,
+-                     ClutterMotionEvent *event)
++clutter_text_motion (ClutterActor *actor,
++                     ClutterEvent *event)
+ {
+-  return clutter_text_move (actor, (ClutterEvent *) event);
++  return clutter_text_move (actor, event);
+ }
+ 
+ static gboolean
+-clutter_text_button_release (ClutterActor       *actor,
+-                             ClutterButtonEvent *event)
++clutter_text_button_release (ClutterActor *actor,
++                             ClutterEvent *event)
+ {
+-  return clutter_text_release (actor, (ClutterEvent *) event);
++  return clutter_text_release (actor, event);
+ }
+ 
+ static gboolean
+-clutter_text_touch_event (ClutterActor      *actor,
+-                          ClutterTouchEvent *event)
++clutter_text_touch_event (ClutterActor *actor,
++                          ClutterEvent *event)
+ {
+-  switch (clutter_event_type ((ClutterEvent *) event))
++  switch (clutter_event_type (event))
+     {
+     case CLUTTER_TOUCH_BEGIN:
+-      return clutter_text_press (actor, (ClutterEvent *) event);
++      return clutter_text_press (actor, event);
+ 
+     case CLUTTER_TOUCH_END:
+     case CLUTTER_TOUCH_CANCEL:
+       /* TODO: the cancel case probably need a special handler */
+-      return clutter_text_release (actor, (ClutterEvent *) event);
++      return clutter_text_release (actor, event);
+ 
+     case CLUTTER_TOUCH_UPDATE:
+-      return clutter_text_move (actor, (ClutterEvent *) event);
++      return clutter_text_move (actor, event);
+ 
+     default:
+       break;
+@@ -2424,8 +2424,8 @@ clutter_text_remove_password_hint (gpointer data)
+ }
+ 
+ static gboolean
+-clutter_text_key_press (ClutterActor    *actor,
+-                        ClutterKeyEvent *event)
++clutter_text_key_press (ClutterActor *actor,
++                        ClutterEvent *event)
+ {
+   ClutterText *self = CLUTTER_TEXT (actor);
+   ClutterTextPrivate *priv = self->priv;
+@@ -2445,14 +2445,13 @@ clutter_text_key_press (ClutterActor    *actor,
+   pool = clutter_binding_pool_find (g_type_name (CLUTTER_TYPE_TEXT));
+   g_assert (pool != NULL);
+ 
+-  flags = clutter_event_get_flags ((ClutterEvent *) event);
+-  keyval = clutter_event_get_key_symbol ((ClutterEvent *) event);
+-  modifiers = clutter_event_get_state ((ClutterEvent *) event);
++  flags = clutter_event_get_flags (event);
++  keyval = clutter_event_get_key_symbol (event);
++  modifiers = clutter_event_get_state (event);
+ 
+   if (!(flags & CLUTTER_EVENT_FLAG_INPUT_METHOD) &&
+       clutter_input_focus_is_focused (priv->input_focus) &&
+-      clutter_input_focus_filter_event (priv->input_focus,
+-					(ClutterEvent *) event))
++      clutter_input_focus_filter_event (priv->input_focus, event))
+     return CLUTTER_EVENT_STOP;
+ 
+   /* we allow passing synthetic events that only contain
+@@ -2479,7 +2478,7 @@ clutter_text_key_press (ClutterActor    *actor,
+       gunichar key_unichar;
+ 
+       /* Skip keys when control is pressed */
+-      key_unichar = clutter_event_get_key_unicode ((ClutterEvent *) event);
++      key_unichar = clutter_event_get_key_unicode (event);
+ 
+       /* return is reported as CR, but we want LF */
+       if (key_unichar == '\r')
+@@ -2514,15 +2513,14 @@ clutter_text_key_press (ClutterActor    *actor,
+ }
+ 
+ static gboolean
+-clutter_text_key_release (ClutterActor    *actor,
+-                          ClutterKeyEvent *event)
++clutter_text_key_release (ClutterActor *actor,
++                          ClutterEvent *event)
+ {
+   ClutterText *self = CLUTTER_TEXT (actor);
+   ClutterTextPrivate *priv = self->priv;
+ 
+   if (clutter_input_focus_is_focused (priv->input_focus) &&
+-      clutter_input_focus_filter_event (priv->input_focus,
+-					(ClutterEvent *) event))
++      clutter_input_focus_filter_event (priv->input_focus, event))
+     return CLUTTER_EVENT_STOP;
+ 
+   return CLUTTER_EVENT_PROPAGATE;
+diff --git a/src/tests/clutter/conform/binding-pool.c b/src/tests/clutter/conform/binding-pool.c
+index 7b1c04308f..9c355d0c5e 100644
+--- a/src/tests/clutter/conform/binding-pool.c
++++ b/src/tests/clutter/conform/binding-pool.c
+@@ -110,8 +110,8 @@ key_group_action_activate (KeyGroup            *self,
+ }
+ 
+ static gboolean
+-key_group_key_press (ClutterActor    *actor,
+-                     ClutterKeyEvent *event)
++key_group_key_press (ClutterActor *actor,
++                     ClutterEvent *event)
+ {
+   ClutterBindingPool *pool;
+   gboolean res;
+@@ -120,8 +120,8 @@ key_group_key_press (ClutterActor    *actor,
+   g_assert (pool != NULL);
+ 
+   res = clutter_binding_pool_activate (pool,
+-                                       clutter_event_get_key_symbol ((ClutterEvent *) event),
+-                                       clutter_event_get_state ((ClutterEvent *) event),
++                                       clutter_event_get_key_symbol (event),
++                                       clutter_event_get_state (event),
+                                        G_OBJECT (actor));
+ 
+   /* if we activate a key binding, redraw the actor */
+diff --git a/src/tests/clutter/interactive/test-binding-pool.c b/src/tests/clutter/interactive/test-binding-pool.c
+index eec56b86a3..29ca46e126 100644
+--- a/src/tests/clutter/interactive/test-binding-pool.c
++++ b/src/tests/clutter/interactive/test-binding-pool.c
+@@ -130,8 +130,8 @@ key_group_action_activate (KeyGroup            *self,
+ }
+ 
+ static gboolean
+-key_group_key_press (ClutterActor    *actor,
+-                     ClutterKeyEvent *event)
++key_group_key_press (ClutterActor *actor,
++                     ClutterEvent *event)
+ {
+   ClutterBindingPool *pool;
+   gboolean res;
+@@ -140,8 +140,8 @@ key_group_key_press (ClutterActor    *actor,
+   g_assert (pool != NULL);
+ 
+   res = clutter_binding_pool_activate (pool,
+-                                       clutter_event_get_key_symbol ((ClutterEvent *) event),
+-                                       clutter_event_get_state ((ClutterEvent *) event),
++                                       clutter_event_get_key_symbol (event),
++                                       clutter_event_get_state (event),
+                                        G_OBJECT (actor));
+ 
+   /* if we activate a key binding, redraw the actor */
+-- 
+GitLab
+
