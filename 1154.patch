@@ -1,7 +1,45 @@
+From d67d22f948a1b43e626b85db007e1410bb906d28 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Jonas=20=C3=85dahl?= <jadahl@gmail.com>
+Date: Thu, 22 Jun 2023 10:35:27 +0200
+Subject: [PATCH 01/17] backend: Init settings before initable_init
+
+This means the settings instance is there before the backend backend's
+initable_init() function gets called.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/3085>
+---
+ src/backends/meta-backend.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/backends/meta-backend.c b/src/backends/meta-backend.c
+index 1b864f360..0a2ff8bb9 100644
+--- a/src/backends/meta-backend.c
++++ b/src/backends/meta-backend.c
+@@ -791,6 +791,8 @@ meta_backend_constructed (GObject *object)
+ 
+   g_assert (priv->context);
+ 
++  priv->settings = meta_settings_new (backend);
++
+ #ifdef HAVE_LIBWACOM
+   priv->wacom_db = libwacom_database_new ();
+   if (!priv->wacom_db)
+@@ -1201,7 +1203,6 @@ meta_backend_initable_init (GInitable     *initable,
+   MetaBackend *backend = META_BACKEND (initable);
+   MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+ 
+-  priv->settings = meta_settings_new (backend);
+   priv->orientation_manager = g_object_new (META_TYPE_ORIENTATION_MANAGER, NULL);
+ 
+   priv->monitor_manager = meta_backend_create_monitor_manager (backend, error);
+-- 
+2.41.0
+
+
 From 098f8cca547d1fdbd8a0cfbd9ba9e7cd45c9f7f2 Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Tue, 4 Aug 2020 00:28:12 +0300
-Subject: [PATCH 01/16] clutter/frame-clock: Add a mode for variable scheduling
+Subject: [PATCH 02/17] clutter/frame-clock: Add a mode for variable scheduling
 
 A new variable scheduling mode is introduced which allows lower
 priority updates to be schduled on a timeout which represents
@@ -272,7 +310,7 @@ index 6fd5de47a..085c7a096 100644
 From 90d9d1d3e27eb71076bf1d77ed38978a795efd12 Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Tue, 17 Mar 2020 21:42:37 +0200
-Subject: [PATCH 02/16] connector/kms: Detect variable refresh rate capability
+Subject: [PATCH 03/17] connector/kms: Detect variable refresh rate capability
 
 The "vrr_capable" property indicates whether variable refresh rate is
 supported for a connector.
@@ -359,7 +397,7 @@ index be946a506..ec5c61a68 100644
 From a33803f76cb3a8f8c42cf978b4ce9fa8fa971c31 Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Sat, 2 Jul 2022 17:10:36 +0300
-Subject: [PATCH 03/16] kms: Allow setting the "VRR_ENABLED" property on a CRTC
+Subject: [PATCH 04/17] kms: Allow setting the "VRR_ENABLED" property on a CRTC
 
 Add the "VRR_ENABLED" KMS property ID and a function to update it
 for a CRTC.
@@ -711,7 +749,7 @@ index 26da6ca27..93bd8e417 100644
 From f59043d8074058bceae53be39ee16ac3d8e1c5f6 Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Tue, 20 Jun 2023 22:53:43 +0300
-Subject: [PATCH 04/16] settings: Add experimental feature for variable refresh
+Subject: [PATCH 05/17] settings: Add experimental feature for variable refresh
  rate
 
 Require the "variable-refresh-rate" keyword under the
@@ -788,7 +826,7 @@ index 730a8e8c3..9b380202b 100644
 From 0079a969efaff2775419a59852bae4f3197b37dc Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Sun, 31 Jul 2022 14:04:01 +0300
-Subject: [PATCH 05/16] backends/native: Add udev rule to disable VRR for i915
+Subject: [PATCH 06/17] backends/native: Add udev rule to disable VRR for i915
 
 This adds a udev rule that disables support for VRR with i915
 for now.
@@ -884,7 +922,7 @@ index 6b3e7552f..9f143c2a9 100644
 From dd186323c43cd80324f5e9e680633567e364150c Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Tue, 20 Jun 2023 23:06:00 +0300
-Subject: [PATCH 06/16] gpu/kms: Allow checking if VRR should be disabled
+Subject: [PATCH 07/17] gpu/kms: Allow checking if VRR should be disabled
 
 ---
  src/backends/native/meta-gpu-kms.c | 17 +++++++++++++++++
@@ -938,7 +976,7 @@ index 7a890c845..71808eed5 100644
 From 22f1bce791bd493380340b524f9c220ddc03a3be Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Fri, 10 Jun 2022 19:45:47 +0300
-Subject: [PATCH 07/16] output/kms: Allow setting the VRR mode of an output
+Subject: [PATCH 08/17] output/kms: Allow setting the VRR mode of an output
 
 Add a function to check if an output is capable of VRR, a function to
 check if VRR is configured to be disallowed for the output and a
@@ -1099,7 +1137,7 @@ index a9d8f99b1..0d416531a 100644
 From fc282705f0296c735d23612504aa3c4a9ce076f9 Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Tue, 17 Mar 2020 20:57:41 +0200
-Subject: [PATCH 08/16] monitor: Allow checking the state of variable refresh
+Subject: [PATCH 09/17] monitor: Allow checking the state of variable refresh
  rate
 
 A monitor is considered to support variable refresh rate if its main
@@ -1161,7 +1199,7 @@ index c679f5368..fe55bc663 100644
 From ba79265b5d08b20a82ec3a8314820874d98e44cf Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Tue, 17 Mar 2020 20:52:16 +0200
-Subject: [PATCH 09/16] monitor-manager: Add variable refresh rate
+Subject: [PATCH 10/17] monitor-manager: Add variable refresh rate
  configuration
 
 Allows configuring variable refresh rate for monitors.
@@ -1782,7 +1820,7 @@ index 99355f6fe..78f1b60f4 100644
 From 0e88ced2e739c2c6946c7cc86f1697ee8f904630 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Jonas=20=C3=85dahl?= <jadahl@gmail.com>
 Date: Mon, 24 Apr 2023 15:43:05 +0200
-Subject: [PATCH 10/16] renderer/native: Add empty before-redraw function
+Subject: [PATCH 11/17] renderer/native: Add empty before-redraw function
 
 ---
  src/backends/native/meta-renderer-native.c | 7 +++++++
@@ -1858,7 +1896,7 @@ index 8cdf6cb02..17775873e 100644
 From ca9d2b3b8219c34905fc4d4ec95d0c27310ad64a Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Sat, 4 Jul 2020 01:03:19 +0300
-Subject: [PATCH 11/16] renderer-view: Keep track of the associated MetaOutput
+Subject: [PATCH 12/17] renderer-view: Keep track of the associated MetaOutput
 
 It will be used in a following commit to perform operations in the
 context of a MetaOutput from the MetaRendererViewNative.
@@ -1990,7 +2028,7 @@ index 8f3745d3d..a1fc93429 100644
 From 3f0a0e18dec5dcc3b759cb4382f69930f6f5bd7f Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Sat, 4 Jul 2020 22:13:55 +0300
-Subject: [PATCH 12/16] renderer-view/native: Allow requesting frame
+Subject: [PATCH 13/17] renderer-view/native: Allow requesting frame
  synchronization
 
 Frame synchronization is enabled as long as it's requested to be
@@ -2196,7 +2234,7 @@ index 34c37939c..2e112b217 100644
 From 881e2d73179c0e074acd94faed2d0e5c047a6992 Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Sun, 16 Aug 2020 17:14:03 +0300
-Subject: [PATCH 13/16] surface-actor: Add "frozen" signal
+Subject: [PATCH 14/17] surface-actor: Add "frozen" signal
 
 This signal is emitted when the surface actor is frozen and will not
 update until it is thawed.
@@ -2247,7 +2285,7 @@ index 2a13a94b8..3389e4231 100644
 From 57af3a0e6c7681a706ece2a26dcb3e29c90c96aa Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Tue, 14 Jun 2022 01:04:03 +0300
-Subject: [PATCH 14/16] surface-actor: Allow checking if a surface actor covers
+Subject: [PATCH 15/17] surface-actor: Allow checking if a surface actor covers
  a rect
 
 ---
@@ -2303,7 +2341,7 @@ index f69cb1527..3128f513c 100644
 From 3d939df3265d60592e7de3e481dffd518eed218b Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Sat, 11 Jun 2022 12:50:02 +0300
-Subject: [PATCH 15/16] window: Allow checking if a window covers a rect
+Subject: [PATCH 16/17] window: Allow checking if a window covers a rect
 
 This is just a small function to improve the readability of the code.
 ---
@@ -2351,7 +2389,7 @@ index 28dda785e..6b93d13d3 100644
 From 5c70e0148d5302046cc83cfd1c6feb8696521d95 Mon Sep 17 00:00:00 2001
 From: Dor Askayo <dor.askayo@gmail.com>
 Date: Tue, 17 Mar 2020 01:44:25 +0200
-Subject: [PATCH 16/16] compositor/native: Enable frame synchronization for
+Subject: [PATCH 17/17] compositor/native: Enable frame synchronization for
  surface actors
 
 Find a surface actor that meets the criteria to drive the refresh
