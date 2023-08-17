@@ -32,6 +32,9 @@ Patch2:        0001-place-Always-center-initial-setup-fedora-welcome.patch
 # MR1441 (triple buffering)
 Patch3:	       1441.patch
 
+# MR1154 (variable refresh rate support)
+Patch4:        1154.patch
+
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
 BuildRequires: pkgconfig(libwacom)
