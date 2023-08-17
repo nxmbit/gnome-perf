@@ -38,6 +38,9 @@ Patch4:        1154.patch
 #MR3053
 Patch5:        3053.patch
 
+#MR3074
+Patch6:        3074.patch
+
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
 BuildRequires: pkgconfig(libwacom)
