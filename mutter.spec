@@ -35,6 +35,9 @@ Patch3:	       1441.patch
 # MR1154 (variable refresh rate support)
 Patch4:        1154.patch
 
+#MR3053
+Patch5:        3053.patch
+
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
 BuildRequires: pkgconfig(libwacom)
