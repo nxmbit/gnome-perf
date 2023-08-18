@@ -38,8 +38,6 @@ Patch3:	       1441.patch
 #MR3053
 Patch4:        3053.patch
 
-#MR3080
-Patch5:        3080.patch
 
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
 BuildRequires: pkgconfig(sm)
