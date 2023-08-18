@@ -33,7 +33,7 @@ Patch2:        0001-place-Always-center-initial-setup-fedora-welcome.patch
 Patch3:	       1441.patch
 
 # MR1154 (variable refresh rate support)
-#Patch4:        1154.patch
+Patch4:        1154.patch
 
 #MR3053
 #Patch4:        3053.patch
