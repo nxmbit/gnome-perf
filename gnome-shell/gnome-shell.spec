@@ -1,13 +1,15 @@
-%global tarball_version %%(echo %{version} | tr '~' '.')
+%global gnome_major_version 44
+%global gnome_version %{gnome_major_version}.3
+%global tarball_version %%(echo %{gnome_version} | tr '~' '.')
 
 Name:           gnome-shell
-Version:        44.3.perf.1
+Version:        %{gnome_version}.perf.1
 Release:        %autorelease
 Summary:        Window management and application launching for GNOME
 
 License:        GPLv2+
 URL:            https://wiki.gnome.org/Projects/GnomeShell
-Source0:        https://download.gnome.org/sources/gnome-shell/44/%{name}-%{tarball_version}.tar.xz
+Source0:        https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{tarball_version}.tar.xz
 
 # Replace Epiphany with Firefox in the default favourite apps list
 Patch10001: gnome-shell-favourite-apps-firefox.patch
