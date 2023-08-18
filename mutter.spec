@@ -36,7 +36,7 @@ Patch3:	       1441.patch
 #Patch4:        1154.patch
 
 #MR3053
-Patch4:        3053.patch
+#Patch4:        3053.patch
 
 
 BuildRequires: pkgconfig(gobject-introspection-1.0) >= 1.41.0
