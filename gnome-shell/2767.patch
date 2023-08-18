@@ -1,0 +1,165 @@
+From 294e6c8f8006af9852878b5afddeb7b3219fe4d5 Mon Sep 17 00:00:00 2001
+From: maniacx <macs18max@gmail.com>
+Date: Tue, 16 May 2023 18:33:19 -0500
+Subject: [PATCH] popupMenu: Replace ornament unicode with icons
+
+Ported from Sam Hewett's Merge-Request.
+https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/2308#8714a3530d73823716c0f8334aceaabeaccd01b7
+
+The CHECK ornament used in powerprofile and volume control is not very
+pleasant looking, specially if system font is changed.
+Replace CHECK and DOT unicode ornament with revelant icons in popupMenu.
+
+Solves issue: https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/6055
+
+Part-of: <https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/2767>
+---
+ data/gnome-shell-icons.gresource.xml               |  2 ++
+ .../scalable/actions/ornament-check-symbolic.svg   |  4 ++++
+ .../scalable/actions/ornament-dot-symbolic.svg     |  4 ++++
+ data/theme/gnome-shell-sass/_drawing.scss          |  3 ---
+ data/theme/gnome-shell-sass/widgets/_popovers.scss | 11 ++++-------
+ js/ui/popupMenu.js                                 | 14 +++++++-------
+ js/ui/status/backgroundApps.js                     |  2 +-
+ 7 files changed, 22 insertions(+), 18 deletions(-)
+ create mode 100644 data/icons/scalable/actions/ornament-check-symbolic.svg
+ create mode 100644 data/icons/scalable/actions/ornament-dot-symbolic.svg
+
+diff --git a/data/gnome-shell-icons.gresource.xml b/data/gnome-shell-icons.gresource.xml
+index fb33b22dc..c1e575c44 100644
+--- a/data/gnome-shell-icons.gresource.xml
++++ b/data/gnome-shell-icons.gresource.xml
+@@ -5,6 +5,8 @@
+     <file>scalable/actions/carousel-arrow-next-symbolic.svg</file>
+     <file>scalable/actions/carousel-arrow-previous-symbolic.svg</file>
+     <file>scalable/actions/dark-mode-symbolic.svg</file>
++    <file>scalable/actions/ornament-check-symbolic.svg</file>
++    <file>scalable/actions/ornament-dot-symbolic.svg</file>
+     <file>scalable/actions/pointer-double-click-symbolic.svg</file>
+     <file>scalable/actions/pointer-drag-symbolic.svg</file>
+     <file>scalable/actions/pointer-primary-click-symbolic.svg</file>
+diff --git a/data/icons/scalable/actions/ornament-check-symbolic.svg b/data/icons/scalable/actions/ornament-check-symbolic.svg
+new file mode 100644
+index 000000000..7a9551fad
+--- /dev/null
++++ b/data/icons/scalable/actions/ornament-check-symbolic.svg
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<svg height="16px" viewBox="0 0 16 16" width="16px" xmlns="http://www.w3.org/2000/svg">
++    <path d="m 13.753906 4.660156 c 0.175782 -0.199218 0.261719 -0.460937 0.246094 -0.726562 c -0.019531 -0.265625 -0.140625 -0.511719 -0.339844 -0.6875 c -0.199218 -0.175782 -0.460937 -0.261719 -0.726562 -0.246094 c -0.265625 0.019531 -0.511719 0.140625 -0.6875 0.339844 l -6.296875 7.195312 l -2.242188 -2.242187 c -0.390625 -0.390625 -1.023437 -0.390625 -1.414062 0 c -0.1875 0.1875 -0.292969 0.441406 -0.292969 0.707031 s 0.105469 0.519531 0.292969 0.707031 l 3 3 c 0.195312 0.195313 0.464843 0.304688 0.738281 0.292969 c 0.277344 -0.007812 0.539062 -0.132812 0.722656 -0.339844 z m 0 0" fill="#2e3436"/>
++</svg>
+diff --git a/data/icons/scalable/actions/ornament-dot-symbolic.svg b/data/icons/scalable/actions/ornament-dot-symbolic.svg
+new file mode 100644
+index 000000000..e9d7ec181
+--- /dev/null
++++ b/data/icons/scalable/actions/ornament-dot-symbolic.svg
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<svg height="16px" viewBox="0 0 16 16" width="16px" xmlns="http://www.w3.org/2000/svg">
++    <path d="m 11 8 c 0 1.65625 -1.34375 3 -3 3 s -3 -1.34375 -3 -3 s 1.34375 -3 3 -3 s 3 1.34375 3 3 z m 0 0" fill="#2e3436"/>
++</svg>
+diff --git a/data/theme/gnome-shell-sass/_drawing.scss b/data/theme/gnome-shell-sass/_drawing.scss
+index a69d38175..1aaeb2f4d 100644
+--- a/data/theme/gnome-shell-sass/_drawing.scss
++++ b/data/theme/gnome-shell-sass/_drawing.scss
+@@ -344,9 +344,6 @@
+   transition-duration: 100ms;
+   padding: $base_padding*1.5 $base_padding*2;
+ 
+-  &:ltr {padding-left: $base_padding;}
+-  &:rtl {padding-right: $base_padding;}
+-
+   @if $flat {
+     @include button(undecorated);
+     box-shadow: none !important;
+diff --git a/data/theme/gnome-shell-sass/widgets/_popovers.scss b/data/theme/gnome-shell-sass/widgets/_popovers.scss
+index 6ab20c21b..6ff850a14 100644
+--- a/data/theme/gnome-shell-sass/widgets/_popovers.scss
++++ b/data/theme/gnome-shell-sass/widgets/_popovers.scss
+@@ -76,7 +76,8 @@ $submenu_bg_color: lighten($menu_bg_color, 7%);
+   }
+ 
+   .popup-menu-ornament {
+-    min-width: $base_icon_size !important;
++    icon-size: $base_icon_size !important;
++    width: $base_icon_size;
+   }
+ 
+   // submenu specific styles
+@@ -103,12 +104,8 @@ $submenu_bg_color: lighten($menu_bg_color, 7%);
+ 
+ // container for radio and check boxes
+ .popup-menu-ornament {
+-  @extend %heading;
+-  width: 1.2em;
+-  text-align: center !important;
+-
+-  &:ltr { text-align: right;}
+-  &:rtl { text-align: left;}
++  icon-size: $base_icon_size !important;
++  width: $base_icon_size;
+ }
+ 
+ // separator
+diff --git a/js/ui/popupMenu.js b/js/ui/popupMenu.js
+index c5fecc0ae..2f1dd679d 100644
+--- a/js/ui/popupMenu.js
++++ b/js/ui/popupMenu.js
+@@ -89,8 +89,8 @@ var PopupBaseMenuItem = GObject.registerClass({
+         this._delegate = this;
+ 
+         this._ornament = Ornament.NONE;
+-        this._ornamentLabel = new St.Label({ style_class: 'popup-menu-ornament' });
+-        this.add(this._ornamentLabel);
++        this._ornamentIcon = new St.Icon({style_class: 'popup-menu-ornament'});
++        this.add(this._ornamentIcon);
+ 
+         this._parent = null;
+         this._active = false;
+@@ -264,17 +264,17 @@ var PopupBaseMenuItem = GObject.registerClass({
+         this._ornament = ornament;
+ 
+         if (ornament == Ornament.DOT) {
+-            this._ornamentLabel.text = '\u2022';
++            this._ornamentIcon.icon_name = 'ornament-dot-symbolic';
+             this.add_accessible_state(Atk.StateType.CHECKED);
+         } else if (ornament == Ornament.CHECK) {
+-            this._ornamentLabel.text = '\u2713';
++            this._ornamentIcon.icon_name = 'ornament-check-symbolic';
+             this.add_accessible_state(Atk.StateType.CHECKED);
+         } else if (ornament == Ornament.NONE || ornament == Ornament.HIDDEN) {
+-            this._ornamentLabel.text = '';
++            this._ornamentIcon.icon_name = '';
+             this.remove_accessible_state(Atk.StateType.CHECKED);
+         }
+ 
+-        this._ornamentLabel.visible = ornament != Ornament.HIDDEN;
++        this._ornamentIcon.visible = ornament !== Ornament.HIDDEN;
+     }
+ });
+ 
+@@ -473,7 +473,7 @@ class PopupImageMenuItem extends PopupBaseMenuItem {
+         this.add_child(this.label);
+         this.label_actor = this.label;
+ 
+-        this.set_child_above_sibling(this._ornamentLabel, this.label);
++        this.set_child_above_sibling(this._ornamentIcon, this.label);
+ 
+         this.setIcon(icon);
+     }
+diff --git a/js/ui/status/backgroundApps.js b/js/ui/status/backgroundApps.js
+index 49878c134..35dac2d90 100644
+--- a/js/ui/status/backgroundApps.js
++++ b/js/ui/status/backgroundApps.js
+@@ -74,7 +74,7 @@ var BackgroundAppMenuItem = GObject.registerClass({
+             (bind, source) => [true, source !== null],
+             null);
+ 
+-        this.set_child_above_sibling(this._ornamentLabel, null);
++        this.set_child_above_sibling(this._ornamentIcon, null);
+ 
+         const closeButton = new St.Button({
+             iconName: 'window-close-symbolic',
+-- 
+2.41.0
+
