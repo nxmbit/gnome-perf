@@ -1,9 +1,9 @@
 %global gnome_major_version 44
-%global gnome_version %{gnome_major_version}.3
+%global gnome_version %{gnome_major_version}.4
 %global tarball_version %%(echo %{gnome_version} | tr '~' '.')
 
 Name:           gnome-shell
-Version:        %{gnome_version}.perf.1
+Version:        %{gnome_version}.perf.2
 Release:        %autorelease
 Summary:        Window management and application launching for GNOME
 
