@@ -21,7 +21,7 @@ Summary:       Window and compositing manager based on Clutter
 
 License:       GPLv2+
 URL:           https://www.gnome.org
-#Source0https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{tarball_version}.tar.xz
+
 Source0        https://gitlab.gnome.org/GNOME/%{name}/-/archive/%{gnome_version}/%{name}-%{tarball_version}.tar.gz
 
 # Work-around for OpenJDK's compliance test

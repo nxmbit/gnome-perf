@@ -9,7 +9,7 @@ Summary:        Window management and application launching for GNOME
 
 License:        GPLv2+
 URL:            https://wiki.gnome.org/Projects/GnomeShell
-#Source0https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{tarball_version}.tar.xz
+
 Source0:	https://gitlab.gnome.org/GNOME/%{name}/-/archive/%{gnome_version}/%{name}-%{tarball_version}.tar.gz
 
 # Replace Epiphany with Firefox in the default favourite apps list
