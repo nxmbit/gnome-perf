@@ -60,6 +60,7 @@ BuildRequires:  pkgconfig(libnm)
 BuildRequires:  pkgconfig(polkit-agent-1) >= %{polkit_version}
 BuildRequires:  pkgconfig(libstartup-notification-1.0)
 BuildRequires:  pkgconfig(libsystemd)
+BuildRequires:  asciidoc
 # for screencast recorder functionality
 BuildRequires:  pkgconfig(gstreamer-base-1.0) >= %{gstreamer_version}
 BuildRequires:  pkgconfig(libpipewire-0.3) >= %{pipewire_version}
