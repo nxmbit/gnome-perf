@@ -67,7 +67,6 @@ BuildRequires:  pkgconfig(gdk-x11-3.0) >= %{gtk3_version}
 BuildRequires:  pkgconfig(gtk4) >= %{gtk4_version}
 BuildRequires:  gettext >= 0.19.6
 BuildRequires:  python3
-BuildRequires:  asciidoc
 
 # for barriers
 BuildRequires:  libXfixes-devel >= 5.0
@@ -135,7 +134,6 @@ Requires:       xdg-desktop-portal-gtk >= 1.8.0
 Requires:       xdg-desktop-portal-gnome
 # needed by the welcome dialog
 Recommends:     gnome-tour
-Program a2x found: NO
 Provides:       desktop-notification-daemon = %{version}-%{release}
 Provides:       PolicyKit-authentication-agent = %{version}-%{release}
 Provides:       bundled(gvc)
